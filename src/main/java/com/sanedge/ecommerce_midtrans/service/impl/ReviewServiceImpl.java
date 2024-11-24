@@ -12,6 +12,7 @@ import com.sanedge.ecommerce_midtrans.domain.request.review.CreateReviewRequest;
 import com.sanedge.ecommerce_midtrans.domain.response.MessageResponse;
 import com.sanedge.ecommerce_midtrans.domain.response.review.ReviewResponse;
 import com.sanedge.ecommerce_midtrans.domain.response.user.UserResponse;
+import com.sanedge.ecommerce_midtrans.mapper.ReviewMapper;
 import com.sanedge.ecommerce_midtrans.models.Product;
 import com.sanedge.ecommerce_midtrans.models.Review;
 import com.sanedge.ecommerce_midtrans.models.User;
@@ -25,6 +26,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     private final Logger logger = LoggerFactory.getLogger(ReviewServiceImpl.class);
 
+    private final ReviewMapper reviewMapper;
     private final ReviewRepository reviewRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
@@ -33,10 +35,13 @@ public class ReviewServiceImpl implements ReviewService {
     public ReviewServiceImpl(
             ReviewRepository reviewRepository,
             ProductRepository productRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            ReviewMapper reviewMapper
+            ) {
         this.reviewRepository = reviewRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
+        this.reviewMapper = reviewMapper;
     }
 
     @Override
@@ -53,23 +58,7 @@ public class ReviewServiceImpl implements ReviewService {
             }
 
             logger.info("Retrieved {} reviews successfully", reviews.size());
-            List<ReviewResponse> reviewResponses = reviews.stream()
-                    .map(review -> ReviewResponse.builder()
-                            .id(review.getId())
-                            .name(review.getName())
-                            .comment(review.getComment())
-                            .rating(review.getRating())
-                            .user(UserResponse.builder()
-                                    .id(review.getUser().getId())
-                                    .name(review.getUser().getName())
-                                    .email(review.getUser().getEmail())
-                                    .isStaff(review.getUser().isStaff())
-                                    .createdAt(review.getUser().getCreatedAt())
-                                    .updatedAt(review.getUser().getUpdatedAt())
-                                    .build())
-                            .productId(review.getProduct().getId())
-                            .build())
-                    .toList();
+            List<ReviewResponse> reviewResponses = reviewMapper.toReviewResponses(reviews);
 
             return MessageResponse.builder()
                     .message("Reviews retrieved successfully")
@@ -96,23 +85,9 @@ public class ReviewServiceImpl implements ReviewService {
 
             logger.info("Successfully retrieved review with ID: {}", reviewId);
 
-            UserResponse userResponse = UserResponse.builder()
-                    .id(review.getUser().getId())
-                    .name(review.getUser().getName())
-                    .email(review.getUser().getEmail())
-                    .isStaff(review.getUser().isStaff())
-                    .createdAt(review.getUser().getCreatedAt())
-                    .updatedAt(review.getUser().getUpdatedAt())
-                    .build();
+            
 
-            ReviewResponse reviewResponse = ReviewResponse.builder()
-                    .id(review.getId())
-                    .name(review.getName())
-                    .comment(review.getComment())
-                    .rating(review.getRating())
-                    .user(userResponse)
-                    .productId(review.getProduct().getId())
-                    .build();
+            ReviewResponse reviewResponse = reviewMapper.toReviewResponse(review);
 
             return MessageResponse.builder()
                     .message("Review retrieved successfully")
@@ -172,21 +147,7 @@ public class ReviewServiceImpl implements ReviewService {
 
             logger.info("Product with ID {} updated with new rating: {}", request.getProductID(), averageRating);
 
-            ReviewResponse reviewResponse = ReviewResponse.builder()
-                    .id(savedReview.getId())
-                    .name(savedReview.getName())
-                    .comment(savedReview.getComment())
-                    .rating(savedReview.getRating())
-                    .user(UserResponse.builder()
-                            .id(savedReview.getUser().getId())
-                            .name(savedReview.getUser().getName())
-                            .email(savedReview.getUser().getEmail())
-                            .isStaff(savedReview.getUser().isStaff())
-                            .createdAt(savedReview.getUser().getCreatedAt())
-                            .updatedAt(savedReview.getUser().getUpdatedAt())
-                            .build())
-                    .productId(savedReview.getProduct().getId())
-                    .build();
+            ReviewResponse reviewResponse = reviewMapper.toReviewResponse(savedReview);
 
             return MessageResponse.builder()
                     .message("Review created successfully")

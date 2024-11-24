@@ -3,12 +3,15 @@ package com.sanedge.ecommerce_midtrans.mapper;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.stereotype.Component;
+
 import com.sanedge.ecommerce_midtrans.domain.response.cart.CartResponse;
 import com.sanedge.ecommerce_midtrans.models.Cart;
 
+@Component
 public class CartMapper {
 
-    public static CartResponse toCartResponse(Cart cart) {
+    public CartResponse toCartResponse(Cart cart) {
         if (cart == null) {
             return null;
         }
@@ -25,13 +28,13 @@ public class CartMapper {
                 .build();
     }
 
-    public static List<CartResponse> toCartResponses(List<Cart> carts) {
+    public  List<CartResponse> toCartResponses(List<Cart> carts) {
         if (carts == null || carts.isEmpty()) {
             return List.of();
         }
 
         return carts.stream()
-                .map(CartMapper::toCartResponse)
+                .map(this::toCartResponse)
                 .collect(Collectors.toList());
     }
 }

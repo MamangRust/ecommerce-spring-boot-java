@@ -8,7 +8,7 @@ import com.sanedge.ecommerce_midtrans.models.User;
 public interface RefreshTokenService {
     Optional<RefreshToken> findByToken(String token);
 
-    RefreshToken createRefreshToken(Long userId);
+    RefreshToken createRefreshToken(Long userId, String token);
 
     RefreshToken verifyExpiration(RefreshToken token);
 

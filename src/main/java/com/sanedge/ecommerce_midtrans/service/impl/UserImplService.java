@@ -11,6 +11,7 @@ import com.sanedge.ecommerce_midtrans.domain.request.auth.RegisterRequest;
 import com.sanedge.ecommerce_midtrans.domain.request.user.UpdateUserRequest;
 import com.sanedge.ecommerce_midtrans.domain.response.MessageResponse;
 import com.sanedge.ecommerce_midtrans.domain.response.user.UserResponse;
+import com.sanedge.ecommerce_midtrans.mapper.UserMapper;
 import com.sanedge.ecommerce_midtrans.models.User;
 import com.sanedge.ecommerce_midtrans.repository.UserRepository;
 import com.sanedge.ecommerce_midtrans.service.UserService;
@@ -19,28 +20,21 @@ import com.sanedge.ecommerce_midtrans.service.UserService;
 public class UserImplService implements UserService {
 
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
       private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public UserImplService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserImplService(UserRepository userRepository, PasswordEncoder passwordEncoder, UserMapper userMapper) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.userMapper = userMapper;
     }
 
     @Override
     public MessageResponse getUsers() {
         try {
             List<User> users = userRepository.findAll();
-            List<UserResponse> userResponses = users.stream()
-                    .map(user -> UserResponse.builder()
-                            .id(user.getId())
-                            .name(user.getName())
-                            .email(user.getEmail())
-                            .isStaff(user.isStaff())
-                            .createdAt(user.getCreatedAt())
-                            .updatedAt(user.getUpdatedAt())
-                            .build())
-                    .collect(Collectors.toList());
+            List<UserResponse> userResponses = userMapper.toUserResponses(users);
 
             return MessageResponse.builder()
                     .message("Users retrieved successfully")
@@ -66,15 +60,9 @@ public class UserImplService implements UserService {
             newUser.setPassword(passwordEncoder.encode(request.getPassword()));
 
             User savedUser = userRepository.save(newUser);
-            UserResponse userResponse = UserResponse.builder()
-                    .id(savedUser.getId())
-                    .name(savedUser.getName())
-                    .email(savedUser.getEmail())
-                    .isStaff(savedUser.isStaff())
-                    .createdAt(savedUser.getCreatedAt()) 
-                    .updatedAt(savedUser.getUpdatedAt())
-                    .build();
+            UserResponse userResponse = userMapper.toUserResponse(savedUser);
 
+            
             return MessageResponse.builder()
                     .message("User created successfully")
                     .data(userResponse)
@@ -92,14 +80,7 @@ public class UserImplService implements UserService {
     public MessageResponse getUser(int id) {
         try {
             User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
-            UserResponse userResponse = UserResponse.builder()
-                    .id(user.getId())
-                    .name(user.getName())
-                    .email(user.getEmail())
-                    .isStaff(user.isStaff()) // Assuming this field exists
-                    .createdAt(user.getCreatedAt()) // Ensure the createdAt field is being saved
-                    .updatedAt(user.getUpdatedAt()) // Ensure the updatedAt field is being saved
-                    .build();
+            UserResponse userResponse = userMapper.toUserResponse(user);
 
             return MessageResponse.<UserResponse>builder()
                     .message("User retrieved successfully")
@@ -124,14 +105,7 @@ public class UserImplService implements UserService {
             user.setPassword(request.getPassword());
 
             User updatedUser = userRepository.save(user);
-            UserResponse userResponse = UserResponse.builder()
-                    .id(updatedUser.getId())
-                    .name(updatedUser.getName())
-                    .email(updatedUser.getEmail())
-                    .isStaff(updatedUser.isStaff()) // Assuming this field exists
-                    .createdAt(updatedUser.getCreatedAt()) // Ensure the createdAt field is being saved
-                    .updatedAt(updatedUser.getUpdatedAt()) // Ensure the updatedAt field is being saved
-                    .build();
+            UserResponse userResponse = userMapper.toUserResponse(updatedUser);
 
             return MessageResponse.builder()
                     .message("User updated successfully")

@@ -13,6 +13,7 @@ import com.sanedge.ecommerce_midtrans.domain.request.order.CartItemRequest;
 import com.sanedge.ecommerce_midtrans.domain.request.order.CreateOrderRequest;
 import com.sanedge.ecommerce_midtrans.domain.response.MessageResponse;
 import com.sanedge.ecommerce_midtrans.domain.response.orderResponse.OrderResponse;
+import com.sanedge.ecommerce_midtrans.domain.response.orderResponse.OrderResponses;
 import com.sanedge.ecommerce_midtrans.exceptions.ResourceNotFoundException;
 import com.sanedge.ecommerce_midtrans.mapper.OrderMapper;
 import com.sanedge.ecommerce_midtrans.models.Order;
@@ -25,37 +26,43 @@ import com.sanedge.ecommerce_midtrans.repository.ShippingAddressRepository;
 import com.sanedge.ecommerce_midtrans.repository.UserRepository;
 import com.sanedge.ecommerce_midtrans.service.OrderService;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 public class OrderImplService implements OrderService {
-    private static final Logger logger = LoggerFactory.getLogger(OrderImplService.class);
+   
 
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final OrderItemRepository orderItemRepository;
+    private final OrderMapper orderMapper;
     private final ShippingAddressRepository shippingAddressRepository;
+    
 
     @Autowired
     public OrderImplService(OrderRepository orderRepository, UserRepository userRepository, 
                             OrderItemRepository orderItemRepository, 
-                            ShippingAddressRepository shippingAddressRepository) {
+                            ShippingAddressRepository shippingAddressRepository, OrderMapper orderMapper) {
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
         this.orderItemRepository = orderItemRepository;
         this.shippingAddressRepository = shippingAddressRepository;
+        this.orderMapper = orderMapper;
     }
 
     @Override
     public MessageResponse getAll() {
         try {
-            List<OrderResponse> orders = orderRepository.findAll()
-                    .stream()
-                    .map(OrderMapper::toOrderResponse)
-                    .collect(Collectors.toList());
+            List<Order> orders = orderRepository.findAll();
 
-            logger.info("Successfully retrieved all orders");
+            List<OrderResponses> orderResponse = orderMapper.toOrderResponses(orders);
+
+
+            log.info("Successfully retrieved all orders");
             return MessageResponse.builder()
                     .message("Orders retrieved successfully")
-                    .data(orders)
+                    .data(orderResponse)
                     .statusCode(200)
                     .build();
         } catch (Exception e) {
@@ -108,9 +115,9 @@ public class OrderImplService implements OrderService {
             }
 
             
-            OrderResponse orderResponse = OrderMapper.toOrderResponse(savedOrder);
+            OrderResponse orderResponse = orderMapper.toOrderResponse(savedOrder);
 
-            logger.info("Order created successfully for user ID: {}", request.getUserID());
+            log.info("Order created successfully for user ID: {}", request.getUserID());
             return MessageResponse.builder()
                     .message("Order created successfully")
                     .data(orderResponse)
@@ -127,9 +134,9 @@ public class OrderImplService implements OrderService {
             Order order = orderRepository.findById((long) orderId)
                     .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: " + orderId));
 
-            OrderResponse orderResponse = OrderMapper.toOrderResponse(order);
+            OrderResponse orderResponse = orderMapper.toOrderResponse(order);
 
-            logger.info("Order retrieved successfully for ID: {}", orderId);
+            log.info("Order retrieved successfully for ID: {}", orderId);
             return MessageResponse.builder()
                     .message("Order retrieved successfully")
                     .data(orderResponse)
@@ -145,10 +152,10 @@ public class OrderImplService implements OrderService {
         try {
             List<OrderResponse> orders = orderRepository.findByUser_Id((long) userId)
                     .stream()
-                    .map(OrderMapper::toOrderResponse)
+                    .map(orderMapper::toOrderResponse)
                     .collect(Collectors.toList());
 
-            logger.info("Orders retrieved successfully for user ID: {}", userId);
+            log.info("Orders retrieved successfully for user ID: {}", userId);
             return MessageResponse.builder()
                     .message("Orders retrieved successfully for user")
                     .data(orders)
@@ -160,7 +167,7 @@ public class OrderImplService implements OrderService {
     }
 
     private MessageResponse handleException(String message, Exception e) {
-        logger.error(message, e);
+        log.error(message, e);
         return MessageResponse.builder()
                 .message(message)
                 .data(null)

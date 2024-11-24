@@ -1,6 +1,7 @@
 package com.sanedge.ecommerce_midtrans.service.impl;
 
 import java.time.LocalDate;
+import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,7 +43,7 @@ public class DashboardImplService implements DashboardService {
             int orderCount = countOrder();
             int userCount = countUser();
             int totalRevenue = sumTotalPrice();
-            List<Integer> yearlyRevenue = calculateYearlyRevenue();
+            List<Integer> yearlyRevenue = calculateMonthlyRevenue();
     
 
             logger.info("Dashboard data retrieved successfully");
@@ -91,15 +92,16 @@ public class DashboardImplService implements DashboardService {
         return total != null ? total : 0;
     }
 
-    private List<Integer> calculateYearlyRevenue() {
-        List<Integer> yearlyRevenue = new ArrayList<>();
+    private List<Integer> calculateMonthlyRevenue() {
+        List<Integer> monthlyRevenue = new ArrayList<>();
         int currentYear = LocalDate.now().getYear();
-
+        
+        // Get revenue for all 12 months of the current year
         for (int month = 1; month <= 12; month++) {
-            Integer monthlyRevenue = this.orderRepository.calculateYearlyRevenue(currentYear);
-            yearlyRevenue.add(monthlyRevenue != null ? monthlyRevenue : 0);
+            Integer revenue = orderRepository.calculateMonthlyRevenue(currentYear, month);
+            monthlyRevenue.add(revenue != null ? revenue : 0);
         }
-
-        return yearlyRevenue;
+        
+        return monthlyRevenue;
     }
 }

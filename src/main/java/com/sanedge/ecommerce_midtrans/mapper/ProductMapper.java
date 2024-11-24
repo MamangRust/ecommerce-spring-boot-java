@@ -28,8 +28,8 @@ public class ProductMapper {
                 .price(product.getPrice())
                 .countInStock(product.getCountInStock())
                 .categoryId(product.getCategory().getId().intValue())
-                .createdAt(product.getCreatedAt().toString())
-                .updatedAt(product.getUpdatedAt().toString())
+                .createdAt(product.getCreatedAt() != null ? product.getCreatedAt().toString() : null)
+                .updatedAt(product.getUpdatedAt() != null ? product.getUpdatedAt().toString() : null)
                 .build();
     }
 

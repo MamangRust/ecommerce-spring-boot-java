@@ -16,7 +16,7 @@ import com.sanedge.ecommerce_midtrans.models.ShippingAddress;
 @Component
 public class OrderMapper {
 
-    public static OrderResponse toOrderResponse(Order order) {
+    public OrderResponse toOrderResponse(Order order) {
         if (order == null) {
             return null;
         }
@@ -38,7 +38,7 @@ public class OrderMapper {
                 .build();
     }
 
-    public static List<OrderResponses> toOrderResponses(List<Order> orders) {
+    public  List<OrderResponses> toOrderResponses(List<Order> orders) {
         return orders.stream()
                 .map(order -> OrderResponses.builder()
                         .id(order.getId())
@@ -58,7 +58,7 @@ public class OrderMapper {
                 .collect(Collectors.toList());
     }
 
-    public static List<OrderItemResponse> toOrderItemsResponses(List<OrderItems> orderItems) {
+    public List<OrderItemResponse> toOrderItemsResponses(List<OrderItems> orderItems) {
         return orderItems.stream()
                 .map(item -> OrderItemResponse.builder()
                         .id(item.getId())
@@ -69,7 +69,7 @@ public class OrderMapper {
                 .collect(Collectors.toList());
     }
 
-    public static ShippingAddressResponse toShippingAddressResponse(ShippingAddress address) {
+    public  ShippingAddressResponse toShippingAddressResponse(ShippingAddress address) {
         if (address == null) {
             return null;
         }

@@ -1,6 +1,5 @@
 package com.sanedge.ecommerce_midtrans.controllers;
 
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +23,6 @@ import java.io.IOException;
 @RequestMapping("/api/products")
 public class ProductController {
 
-
     private final ProductService productService;
     private final CloudinaryService cloudinaryService;
 
@@ -34,11 +32,18 @@ public class ProductController {
         this.cloudinaryService = cloudinaryService;
     }
 
-    @GetMapping("/")
+    @GetMapping("/id/{id}")
+    public ResponseEntity<MessageResponse> getProductById(@PathVariable Long id) {
+        log.info("Fetching product by ID: {}", id);
+        MessageResponse response = productService.getProductById(id);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+
+    @GetMapping
     public ResponseEntity<MessageResponse> getAllProducts() {
         log.info("Fetching all products");
         MessageResponse response = productService.getAllProducts();
-        
+
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
@@ -49,12 +54,7 @@ public class ProductController {
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
-    @GetMapping("/id/{productId}")
-    public ResponseEntity<MessageResponse> getProductById(@PathVariable Long productId) {
-        log.info("Fetching product by ID: {}", productId);
-        MessageResponse response = productService.getProductById(productId);
-        return ResponseEntity.status(response.getStatusCode()).body(response);
-    }
+    
 
     @PostMapping("/create")
     public ResponseEntity<MessageResponse> createProduct(
@@ -64,9 +64,19 @@ public class ProductController {
             @RequestParam("price") double price,
             @RequestParam("weight") int weight,
             @RequestParam("brand") String brand,
-            @RequestParam("categoryID") Long categoryId,
+            @RequestParam("categoryId") Long categoryId,
             @RequestParam("countInStock") int countInStock,
             @RequestParam("rating") double rating) throws IOException {
+
+        log.info("Name: {}", name);
+        log.info("Description: {}", description);
+        log.info("Price: {}", price);
+        log.info("Weight: {}", weight);
+        log.info("Brand: {}", brand);
+        log.info("CategoryId: {}", categoryId);
+        log.info("CountInStock: {}", countInStock);
+        log.info("Rating: {}", rating);
+        log.info("File: {}", file.getOriginalFilename());
 
         log.info("Creating new product: {}", name);
 
@@ -75,15 +85,13 @@ public class ProductController {
 
         CreateProductRequest request = new CreateProductRequest();
 
-        int category_id = (int) request.getCategoryID();
-
         request.setName(name);
         request.setDescription(description);
         request.setFilePath(imageUrl);
-        request.setPrice((int) price); 
+        request.setPrice((int) price);
         request.setWeight(weight);
         request.setBrand(brand);
-        request.setCategoryID(category_id);
+        request.setCategoryID((long) categoryId);
         request.setCountInStock(countInStock);
         request.setRating((int) rating);
 
@@ -93,20 +101,49 @@ public class ProductController {
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
-    @PutMapping("/update")
+    @PostMapping("/update")
     public ResponseEntity<MessageResponse> updateProduct(
-            @RequestParam(value = "file", required = false) MultipartFile file,
-            @RequestBody UpdateProductRequest request) throws IOException {
+            @RequestParam("id") Long id,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("name") String name,
+            @RequestParam("description") String description,
+            @RequestParam("price") double price,
+            @RequestParam("weight") int weight,
+            @RequestParam("brand") String brand,
+            @RequestParam("categoryId") Long categoryId,
+            @RequestParam("countInStock") int countInStock,
+            @RequestParam("rating") double rating) throws IOException {
 
-        if (file != null) {
-            log.info("Uploading new image for product: {}", request.getName());
-            String imageUrl = cloudinaryService.uploadToCloudinary(file, request.getName());
-            request.setFilePath(imageUrl);
-            log.info("Uploaded image to Cloudinary: {}", imageUrl);
-        }
+        log.info("Updating product with ID: {}", id);
+        log.info("Name: {}", name);
+        log.info("Description: {}", description);
+        log.info("Price: {}", price);
+        log.info("Weight: {}", weight);
+        log.info("Brand: {}", brand);
+        log.info("CategoryId: {}", categoryId);
+        log.info("CountInStock: {}", countInStock);
+        log.info("Rating: {}", rating);
+        log.info("File: {}", file.getOriginalFilename());
+
+        String imageUrl = cloudinaryService.uploadToCloudinary(file, name);
+        log.info("Uploaded updated image to Cloudinary: {}", imageUrl);
+
+        UpdateProductRequest request = new UpdateProductRequest();
+
+      
+        request.setId(id);
+        request.setName(name);
+        request.setDescription(description);
+        request.setFilePath(imageUrl);
+        request.setPrice((int) price);
+        request.setWeight(weight);
+        request.setBrand(brand);
+        request.setCategoryID(categoryId);
+        request.setCountInStock(countInStock);
+        request.setRating((int) rating);
 
         MessageResponse response = productService.updateProduct(request);
-        log.info("Product updated with ID: {}", request.getId());
+        log.info("Product updated with ID: {}", id);
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 

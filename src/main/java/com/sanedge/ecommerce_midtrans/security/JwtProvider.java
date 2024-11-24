@@ -1,6 +1,7 @@
 package com.sanedge.ecommerce_midtrans.security;
 
 import java.util.Date;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -18,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @Slf4j
 public class JwtProvider {
-    static final String issuer = "MyApp";
+    static final String ISSUER = "MyApp";
 
     @Value("${springjwt.app.jwtSecret}")
     private String jwtSecret;
@@ -26,31 +27,42 @@ public class JwtProvider {
     @Value("${springjwt.app.jwtExpirationMs}")
     private int jwtExpirationMs;
 
-    private Algorithm accessTokenAlgorithm;
+    @Value("${springjwt.app.jwtRefreshExpirationMs}")
+    private int jwtRefreshExpirationMs;
 
-    private JWTVerifier jwtTokenVerifier;
+    private final Algorithm accessTokenAlgorithm;
+    private final JWTVerifier jwtTokenVerifier;
 
-    public JwtProvider(@Value("${springjwt.app.jwtSecret}") String accessTokenSecret,
-            @Value("${springjwt.app.jwtExpirationMs}") int jwtExpirationMs) {
-        jwtExpirationMs = (int) jwtExpirationMs * 60 * 1000;
-        accessTokenAlgorithm = Algorithm.HMAC512(accessTokenSecret);
-        jwtTokenVerifier = JWT.require(accessTokenAlgorithm)
-                .withIssuer(issuer)
+    public JwtProvider(@Value("${springjwt.app.jwtSecret}") String jwtSecret,
+                       @Value("${springjwt.app.jwtExpirationMs}") int jwtExpirationMs,
+                       @Value("${springjwt.app.jwtRefreshExpirationMs}") int jwtRefreshExpirationMs) {
+        this.jwtExpirationMs = jwtExpirationMs;
+        this.jwtRefreshExpirationMs = jwtRefreshExpirationMs;
+        this.accessTokenAlgorithm = Algorithm.HMAC512(jwtSecret);
+        this.jwtTokenVerifier = JWT.require(accessTokenAlgorithm)
+                .withIssuer(ISSUER)
                 .build();
     }
 
+    // Generate access token
     public String generateAccessToken(Authentication authentication) {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
-
-        return generateTokenFromUsername(userPrincipal.getUsername());
+        return generateToken(userPrincipal.getId(), userPrincipal.getUsername(), jwtExpirationMs);
     }
 
-    public String generateTokenFromUsername(String username) {
+    // Generate refresh token
+    public String generateRefreshToken(Long id, String name) {
+        return generateToken(id, name, jwtRefreshExpirationMs);
+    }
+
+  
+    public String generateToken(Long id, String name, int expirationMs) {
         return JWT.create()
-                .withIssuer(issuer)
-                .withSubject(username)
+                .withIssuer(ISSUER)
+                .withClaim("id", id)
+                .withClaim("name", name)
                 .withIssuedAt(new Date())
-                .withExpiresAt(new Date(new Date().getTime() + jwtExpirationMs))
+                .withExpiresAt(new Date(new Date().getTime() + expirationMs))
                 .sign(accessTokenAlgorithm);
     }
 
@@ -58,7 +70,7 @@ public class JwtProvider {
         try {
             return Optional.of(jwtTokenVerifier.verify(token));
         } catch (JWTVerificationException e) {
-            log.error("invalid access token", e);
+            log.error("Invalid access token", e);
         }
         return Optional.empty();
     }
@@ -67,11 +79,23 @@ public class JwtProvider {
         return decodeAccessToken(token).isPresent();
     }
 
-    public String getUsernameAccessToken(String token) {
-        return decodeAccessToken(token).get().getSubject();
+    public Long getIdFromAccessToken(String token) {
+        return decodeAccessToken(token)
+                .map(decodedJWT -> decodedJWT.getClaim("id").asLong())
+                .orElse(null);
     }
 
-    public int getjwtExpirationMs() {
+    public String getNameFromAccessToken(String token) {
+        return decodeAccessToken(token)
+                .map(decodedJWT -> decodedJWT.getClaim("name").asString())
+                .orElse(null);
+    }
+
+    public int getJwtExpirationMs() {
         return jwtExpirationMs;
+    }
+
+    public int getJwtRefreshExpirationMs() {
+        return jwtRefreshExpirationMs;
     }
 }

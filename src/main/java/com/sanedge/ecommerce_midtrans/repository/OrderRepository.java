@@ -28,10 +28,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     int countOrders();
 
 
-    @Query("SELECT SUM(o.totalPrice) FROM Order o WHERE FUNCTION('YEAR', o.createdAt) = :year")
-    Integer calculateYearlyRevenue(int year);
-
+    @Query("SELECT COALESCE(SUM(o.totalPrice), 0) FROM Order o WHERE EXTRACT(YEAR FROM o.createdAt) = :year AND EXTRACT(MONTH FROM o.createdAt) = :month")
+    Integer calculateMonthlyRevenue(int year, int month);
     
-    @Query("SELECT SUM(o.totalPrice) FROM Order o")
+    @Query("SELECT COALESCE(SUM(o.totalPrice), 0) FROM Order o")
     Integer sumTotalPrice();
 }

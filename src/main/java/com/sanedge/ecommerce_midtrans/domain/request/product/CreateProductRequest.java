@@ -18,7 +18,7 @@ public class CreateProductRequest {
 
     @JsonProperty("category_id") 
     @NotBlank(message = "Category ID is required")
-    private int categoryID;
+    private long categoryID;
 
     @JsonProperty("description")  
     @NotBlank(message = "Product description is required")

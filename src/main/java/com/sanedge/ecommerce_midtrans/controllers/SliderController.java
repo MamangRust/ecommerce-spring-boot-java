@@ -1,6 +1,5 @@
 package com.sanedge.ecommerce_midtrans.controllers;
 
-import com.sanedge.ecommerce_midtrans.domain.request.category.CreateCategoryRequest;
 import com.sanedge.ecommerce_midtrans.domain.request.slider.CreateSliderRequest;
 import com.sanedge.ecommerce_midtrans.domain.request.slider.UpdateSliderRequest;
 import com.sanedge.ecommerce_midtrans.domain.response.MessageResponse;
@@ -17,15 +16,14 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/slider")
+@RequestMapping("/api/sliders")
 public class SliderController {
 
     private final SliderService sliderService;
-      private final CloudinaryService cloudinaryService;
-
+    private final CloudinaryService cloudinaryService;
 
     @Autowired
-    public SliderController(SliderService sliderService,CloudinaryService cloudinaryService) {
+    public SliderController(SliderService sliderService, CloudinaryService cloudinaryService) {
         this.sliderService = sliderService;
         this.cloudinaryService = cloudinaryService;
     }
@@ -44,13 +42,12 @@ public class SliderController {
 
         MessageResponse response = sliderService.getSlider(id);
 
-
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<MessageResponse> createSlider(@RequestParam("file") MultipartFile file,
-            @RequestParam("name") String name)throws IOException {
+            @RequestParam("name") String name) throws IOException {
 
         CreateSliderRequest request = new CreateSliderRequest();
 
@@ -64,27 +61,26 @@ public class SliderController {
 
         MessageResponse response = sliderService.create(request);
 
-
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<MessageResponse> updateSlider(@RequestParam("id") int id,@RequestParam("file") MultipartFile file,
-    @RequestParam("name") String name) throws IOException {
+    @PostMapping("/update")
+    public ResponseEntity<MessageResponse> updateSlider(@RequestParam("id") int id,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("name") String name) throws IOException {
         UpdateSliderRequest request = new UpdateSliderRequest();
 
         String imageUrl = cloudinaryService.uploadToCloudinary(file, name);
         log.info("Uploaded image to Cloudinary: {}", imageUrl);
 
+        request.setId(id);
         request.setNama(name);
         request.setFilePath(imageUrl);
 
-        
         log.info("Request to update slider with ID: {} and data: {}", id, request);
-     
+
         MessageResponse response = sliderService.update(request);
 
-        
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 

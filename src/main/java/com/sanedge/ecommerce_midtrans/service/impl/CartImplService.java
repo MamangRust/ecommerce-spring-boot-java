@@ -21,23 +21,29 @@ import com.sanedge.ecommerce_midtrans.repository.CartRepository;
 import com.sanedge.ecommerce_midtrans.repository.ProductRepository;
 import com.sanedge.ecommerce_midtrans.repository.UserRepository;
 import com.sanedge.ecommerce_midtrans.service.CartService;
+
+import lombok.extern.slf4j.Slf4j;
+
 import com.sanedge.ecommerce_midtrans.domain.response.MessageResponse;
 
 @Service
+@Slf4j
 public class CartImplService implements CartService {
 
-    private static final Logger logger = LoggerFactory.getLogger(CartImplService.class);
+   
 
     private final CartRepository cartRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final CartMapper cartMapper;
 
     @Autowired
     public CartImplService(CartRepository cartRepository, ProductRepository productRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository, CartMapper cartMapper) {
         this.cartRepository = cartRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
+        this.cartMapper = cartMapper;
     }
 
     @Override
@@ -46,7 +52,7 @@ public class CartImplService implements CartService {
             long myLog = (long) userId;
 
             List<Cart> carts = cartRepository.findAllByUserId(myLog);
-            List<CartResponse> cartResponses = CartMapper.toCartResponses(carts);
+            List<CartResponse> cartResponses = cartMapper.toCartResponses(carts);
 
             return MessageResponse.builder()
                     .message("Carts fetched successfully")
@@ -54,7 +60,7 @@ public class CartImplService implements CartService {
                     .statusCode(200)
                     .build();
         } catch (Exception e) {
-            logger.error("Error while getting cart by user id", e);
+            log.error("Error while getting cart by user id", e);
             return MessageResponse.builder()
                     .message("Error while getting cart by user id")
                     .data(null)
@@ -66,6 +72,8 @@ public class CartImplService implements CartService {
     @Override
     public MessageResponse create(CreateRequestCart request) {
         try {
+            log.info("Request: {}", request.toString());
+
             Cart cart = new Cart();
 
             long myProduct = (long) request.getProductId();
@@ -89,11 +97,11 @@ public class CartImplService implements CartService {
 
             return MessageResponse.builder()
                     .message("Cart created successfully")
-                    .data(CartMapper.toCartResponse(savedCart))
+                    .data(cartMapper.toCartResponse(savedCart))
                     .statusCode(201)
                     .build();
         } catch (Exception e) {
-            logger.error("Error while creating cart", e);
+            log.error("Error while creating cart", e);
             return MessageResponse.builder()
                     .message("Error while creating cart")
                     .data(null)
@@ -114,11 +122,11 @@ public class CartImplService implements CartService {
 
             return MessageResponse.builder()
                     .message("Cart deleted successfully")
-                    .data(CartMapper.toCartResponse(cart))
+                    .data(cartMapper.toCartResponse(cart))
                     .statusCode(200)
                     .build();
         } catch (Exception e) {
-            logger.error("Error while deleting cart", e);
+            log.error("Error while deleting cart", e);
             return MessageResponse.builder()
                     .message("Error while deleting cart")
                     .data(null)
@@ -138,7 +146,7 @@ public class CartImplService implements CartService {
 
             int deletedCount = cartRepository.deleteByIdIn(longIds);
 
-            logger.info("Deleted {} carts", deletedCount);
+            log.info("Deleted {} carts", deletedCount);
 
             return MessageResponse.builder()
                     .message("Deleted " + deletedCount + " carts successfully")
@@ -146,7 +154,7 @@ public class CartImplService implements CartService {
                     .statusCode(200)
                     .build();
         } catch (Exception e) {
-            logger.error("Error while deleting multiple carts", e);
+            log.error("Error while deleting multiple carts", e);
             return MessageResponse.builder()
                     .message("Error while deleting multiple carts")
                     .data(null)

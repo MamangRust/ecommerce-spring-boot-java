@@ -6,9 +6,12 @@ import com.sanedge.ecommerce_midtrans.models.Slider;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.stereotype.Component;
+
+@Component
 public class SliderMapper {
 
-    public static SliderResponse toSliderResponse(Slider slider) {
+    public SliderResponse toSliderResponse(Slider slider) {
         if (slider == null) {
             return null;
         }
@@ -17,16 +20,18 @@ public class SliderMapper {
                 .id(slider.getId())
                 .name(slider.getName())
                 .image(slider.getImage())
+                .createdAt(slider.getCreatedAt() != null ? slider.getCreatedAt().toString() : null)
+                .updatedAt(slider.getUpdatedAt() != null ? slider.getUpdatedAt().toString() : null)
                 .build();
     }
 
-    public static List<SliderResponse> toSliderResponses(List<Slider> sliders) {
+    public  List<SliderResponse> toSliderResponses(List<Slider> sliders) {
         if (sliders == null || sliders.isEmpty()) {
             return List.of();
         }
 
         return sliders.stream()
-                .map(SliderMapper::toSliderResponse)
+                .map(this::toSliderResponse)
                 .collect(Collectors.toList());
     }
 }

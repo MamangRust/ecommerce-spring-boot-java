@@ -12,13 +12,13 @@ import lombok.Data;
 public class UpdateProductRequest {
     @JsonProperty("id")  
     @NotNull(message = "Product ID is required")
-    private int id;
+    private long id;
 
     @JsonProperty("name")  
     private String name;
 
     @JsonProperty("category_id")  
-    private int categoryID;
+    private long categoryID;
 
     @JsonProperty("description")  
     private String description;

@@ -4,50 +4,46 @@ import com.sanedge.ecommerce_midtrans.domain.request.slider.CreateSliderRequest;
 import com.sanedge.ecommerce_midtrans.domain.request.slider.UpdateSliderRequest;
 import com.sanedge.ecommerce_midtrans.domain.response.MessageResponse;
 import com.sanedge.ecommerce_midtrans.domain.response.slider.SliderResponse;
+import com.sanedge.ecommerce_midtrans.mapper.SliderMapper;
 import com.sanedge.ecommerce_midtrans.models.Slider;
 import com.sanedge.ecommerce_midtrans.repository.SliderRepository;
 import com.sanedge.ecommerce_midtrans.service.SliderService;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class SliderServiceImpl implements SliderService {
 
-    private final Logger logger = LoggerFactory.getLogger(SliderServiceImpl.class);
+   
     private final SliderRepository sliderRepository;
+    private final SliderMapper sliderMapper;
 
     @Autowired
-    public SliderServiceImpl(SliderRepository sliderRepository) {
+    public SliderServiceImpl(SliderRepository sliderRepository, SliderMapper sliderMapper) {
         this.sliderRepository = sliderRepository;
+        this.sliderMapper = sliderMapper;
     }
 
     @Override
     public MessageResponse getSliders() {
-        logger.info("Starting getSliders() method");
+        log.info("Starting getSliders() method");
         try {
             List<Slider> sliders = sliderRepository.findAll();
             if (sliders.isEmpty()) {
-                logger.warn("No sliders found");
+                log.warn("No sliders found");
                 return MessageResponse.builder()
                         .message("No sliders found")
                         .statusCode(404)
                         .build();
             }
 
-            logger.info("Retrieved {} sliders successfully", sliders.size());
-            List<SliderResponse> sliderResponses = sliders.stream()
-                    .map(slider -> SliderResponse.builder()
-                            .id(slider.getId())
-                            .name(slider.getName())
-                            .image(slider.getImage())
-                            .build())
-                    .collect(Collectors.toList());
+            log.info("Retrieved {} sliders successfully", sliders.size());
+            List<SliderResponse> sliderResponses = sliderMapper.toSliderResponses(sliders);
 
             return MessageResponse.builder()
                     .message("Sliders retrieved successfully")
@@ -55,7 +51,7 @@ public class SliderServiceImpl implements SliderService {
                     .statusCode(200)
                     .build();
         } catch (Exception e) {
-            logger.error("Error occurred while retrieving sliders: {}", e.getMessage());
+            log.error("Error occurred while retrieving sliders: {}", e.getMessage());
             return MessageResponse.builder()
                     .message("Failed to retrieve sliders")
                     .statusCode(500)
@@ -65,18 +61,16 @@ public class SliderServiceImpl implements SliderService {
 
     @Override
     public MessageResponse getSlider(int sliderId) {
-        logger.info("Starting getSlider() method with ID: {}", sliderId);
+        log.info("Starting getSlider() method with ID: {}", sliderId);
         try {
             long id = (long) sliderId;
 
             Slider slider = sliderRepository.findById(id).orElseThrow(() -> new RuntimeException("Slider not found"));
 
-            logger.info("Successfully retrieved slider with ID: {}", sliderId);
-            SliderResponse sliderResponse = SliderResponse.builder()
-                    .id(slider.getId())
-                    .name(slider.getName())
-                    .image(slider.getImage())
-                    .build();
+            log.info("Successfully retrieved slider with ID: {}", sliderId);
+            SliderResponse sliderResponse = sliderMapper.toSliderResponse(slider);
+
+
 
             return MessageResponse.builder()
                     .message("Slider retrieved successfully")
@@ -84,7 +78,7 @@ public class SliderServiceImpl implements SliderService {
                     .statusCode(200)
                     .build();
         } catch (Exception e) {
-            logger.error("Error occurred while retrieving slider by ID: {}", e.getMessage());
+            log.error("Error occurred while retrieving slider by ID: {}", e.getMessage());
             return MessageResponse.builder()
                     .message("Failed to retrieve slider by ID")
                     .statusCode(500)
@@ -94,20 +88,16 @@ public class SliderServiceImpl implements SliderService {
 
     @Override
     public MessageResponse create(CreateSliderRequest createSliderRequest) {
-        logger.info("Starting createSlider() method with request: {}", createSliderRequest);
+        log.info("Starting createSlider() method with request: {}", createSliderRequest);
         try {
             Slider newSlider = new Slider();
             newSlider.setName(createSliderRequest.getNama());
             newSlider.setImage(createSliderRequest.getFilePath());
 
             Slider savedSlider = sliderRepository.save(newSlider);
-            logger.info("Slider created successfully with ID: {}", savedSlider.getId());
+            log.info("Slider created successfully with ID: {}", savedSlider.getId());
 
-            SliderResponse sliderResponse = SliderResponse.builder()
-                    .id(savedSlider.getId())
-                    .name(savedSlider.getName())
-                    .image(savedSlider.getImage())
-                    .build();
+            SliderResponse sliderResponse = sliderMapper.toSliderResponse(savedSlider);
 
             return MessageResponse.builder()
                     .message("Slider created successfully")
@@ -115,7 +105,7 @@ public class SliderServiceImpl implements SliderService {
                     .statusCode(201)
                     .build();
         } catch (Exception e) {
-            logger.error("Error occurred while creating slider: {}", e.getMessage());
+            log.error("Error occurred while creating slider: {}", e.getMessage());
             return MessageResponse.builder()
                     .message("Failed to create slider")
                     .statusCode(500)
@@ -125,7 +115,7 @@ public class SliderServiceImpl implements SliderService {
 
     @Override
     public MessageResponse update(UpdateSliderRequest updateSliderRequest) {
-        logger.info("Starting updateSlider() method with request: {}", updateSliderRequest);
+        log.info("Starting updateSlider() method with request: {}", updateSliderRequest);
         try {
             long id = (long) updateSliderRequest.getId();
 
@@ -137,13 +127,9 @@ public class SliderServiceImpl implements SliderService {
             slider.setImage(updateSliderRequest.getFilePath());
 
             Slider updatedSlider = sliderRepository.save(slider);
-            logger.info("Slider with ID {} updated successfully", updatedSlider.getId());
+            log.info("Slider with ID {} updated successfully", updatedSlider.getId());
 
-            SliderResponse sliderResponse = SliderResponse.builder()
-                    .id(updatedSlider.getId())
-                    .name(updatedSlider.getName())
-                    .image(updatedSlider.getImage())
-                    .build();
+            SliderResponse sliderResponse = sliderMapper.toSliderResponse(updatedSlider);
 
             return MessageResponse.builder()
                     .message("Slider updated successfully")
@@ -151,7 +137,7 @@ public class SliderServiceImpl implements SliderService {
                     .statusCode(200)
                     .build();
         } catch (Exception e) {
-            logger.error("Error occurred while updating slider: {}", e.getMessage());
+            log.error("Error occurred while updating slider: {}", e.getMessage());
             return MessageResponse.builder()
                     .message("Failed to update slider")
                     .statusCode(500)
@@ -161,13 +147,13 @@ public class SliderServiceImpl implements SliderService {
 
     @Override
     public MessageResponse delete(int sliderId) {
-        logger.info("Starting deleteSlider() method with ID: {}", sliderId);
+        log.info("Starting deleteSlider() method with ID: {}", sliderId);
         try {
             long id = (long) sliderId;
 
             Slider slider = sliderRepository.findById(id).orElseThrow(() -> new RuntimeException("Slider not found"));
             if (slider == null) {
-                logger.warn("Slider with ID {} not found", sliderId);
+                log.warn("Slider with ID {} not found", sliderId);
                 return MessageResponse.builder()
                         .message("Slider not found")
                         .statusCode(404)
@@ -175,14 +161,14 @@ public class SliderServiceImpl implements SliderService {
             }
 
             sliderRepository.delete(slider);
-            logger.info("Slider with ID {} deleted successfully", sliderId);
+            log.info("Slider with ID {} deleted successfully", sliderId);
 
             return MessageResponse.builder()
                     .message("Slider deleted successfully")
                     .statusCode(200)
                     .build();
         } catch (Exception e) {
-            logger.error("Error occurred while deleting slider: {}", e.getMessage());
+            log.error("Error occurred while deleting slider: {}", e.getMessage());
             return MessageResponse.builder()
                     .message("Failed to delete slider")
                     .statusCode(500)

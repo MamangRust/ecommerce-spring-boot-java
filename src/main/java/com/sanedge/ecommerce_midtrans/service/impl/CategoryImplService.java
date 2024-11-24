@@ -13,8 +13,11 @@ import com.sanedge.ecommerce_midtrans.repository.CategoryRepository;
 import com.sanedge.ecommerce_midtrans.service.CategoryService;
 import com.sanedge.ecommerce_midtrans.utils.SlugUtils;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.List;
 
+@Slf4j
 @Service
 public class CategoryImplService implements CategoryService {
 
@@ -75,7 +78,7 @@ public class CategoryImplService implements CategoryService {
     @Override
     public MessageResponse getCategorySlug(String slug) {
         try {
-            Category category = categoryRepository.findBySlug(slug)
+            Category category = categoryRepository.findBySlugCategory(slug)
                     .orElseThrow(() -> new RuntimeException("Category not found"));
             CategoryResponse categoryResponse = categoryMapper.toCategoryResponse(category);
 
@@ -112,6 +115,7 @@ public class CategoryImplService implements CategoryService {
                     .statusCode(201)
                     .build();
         } catch (Exception e) {
+            log.info("hello: {}", e.toString());
             return MessageResponse.builder()
                     .message("Error while creating category")
                     .data(null)
@@ -142,6 +146,8 @@ public class CategoryImplService implements CategoryService {
                     .statusCode(200)
                     .build();
         } catch (Exception e) {
+            log.error("error: {}", e.toString());
+
             return MessageResponse.builder()
                     .message("Error while updating category")
                     .data(null)

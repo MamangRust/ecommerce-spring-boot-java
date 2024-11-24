@@ -27,10 +27,10 @@ public class ReviewMapper {
                         .name(review.getUser().getName())
                         .email(review.getUser().getEmail())
                         .isStaff(review.getUser().isStaff())
-                        .createdAt(review.getUser().getCreatedAt())
-                        .updatedAt(review.getUser().getUpdatedAt())
+                        .createdAt(review.getUser().getCreatedAt() != null ? review.getUser().getCreatedAt().toString() : null)
+                        .updatedAt(review.getUser().getUpdatedAt() != null ? review.getUser().getUpdatedAt().toString() : null)
                         .build())
-                
+
                 .productId(review.getProduct().getId().intValue())
                 .build();
     }

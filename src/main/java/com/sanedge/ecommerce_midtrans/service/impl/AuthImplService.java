@@ -46,18 +46,20 @@ public class AuthImplService implements AuthService {
     private final RoleRepository roleRepository;
     private final JwtProvider jwtProvider;
     private final PasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
     private final RefreshTokenService refreshTokenService;
 
     @Autowired
     public AuthImplService(AuthenticationManager authenticationManager, UserRepository userRepository,
             RoleRepository roleRepository, PasswordEncoder passwordEncoder, JwtProvider jwtProvider,
-            RefreshTokenService refreshTokenService) {
+            RefreshTokenService refreshTokenService, UserMapper userMapper) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.jwtProvider = jwtProvider;
         this.passwordEncoder = passwordEncoder;
         this.refreshTokenService = refreshTokenService;
+        this.userMapper = userMapper;
     }
 
     @Override
@@ -69,7 +71,7 @@ public class AuthImplService implements AuthService {
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
             String jwt = jwtProvider.generateAccessToken(authentication);
-            long expiresAt = jwtProvider.getjwtExpirationMs();
+            long expiresAt = jwtProvider.getJwtExpirationMs();
             Date date = new Date();
             date.setTime(expiresAt);
 
@@ -80,13 +82,15 @@ public class AuthImplService implements AuthService {
             User user = userRepository.findByEmail(userDetails.getEmail())
                     .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
+            String refresh_token = jwtProvider.generateRefreshToken(user.getId(), user.getName());
+
             Optional<RefreshToken> existingRefreshToken = refreshTokenService.findByUser(user);
 
             if (existingRefreshToken.isPresent()) {
                 refreshTokenService.updateExpiryDate(existingRefreshToken.get());
             } else {
                 refreshTokenService.deleteByUserId(userDetails.getId());
-                RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getId());
+                RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getId(), refresh_token);
                 existingRefreshToken = Optional.of(refreshToken);
             }
 
@@ -99,7 +103,7 @@ public class AuthImplService implements AuthService {
 
             log.info("User successfully logged in: {}", userDetails.getUsername());
 
-            return MessageResponse.builder().message("Berhasil login").data(authResponse).build();
+            return MessageResponse.builder().message("Berhasil login").statusCode(200).data(authResponse).build();
 
         } catch (AuthenticationException ex) {
 
@@ -118,6 +122,12 @@ public class AuthImplService implements AuthService {
     public MessageResponse register(RegisterRequest registerRequest) {
         try {
             User user = new User();
+
+            if (!registerRequest.isPasswordValid()) {
+                return MessageResponse.builder().data(null).statusCode(400)
+                        .message("password dan confirm_password not same").build();
+            }
+
             user.setName(registerRequest.getName());
             user.setStaff(false);
             user.setEmail(registerRequest.getEmail());
@@ -132,7 +142,7 @@ public class AuthImplService implements AuthService {
 
             this.userRepository.save(user);
 
-            UserResponse response = UserMapper.toUserResponse(user);
+            UserResponse response = userMapper.toUserResponse(user);
 
             log.info("User registered successfully: {}", user.getName());
 
@@ -165,7 +175,8 @@ public class AuthImplService implements AuthService {
                     .map((RefreshToken token) -> refreshTokenService.verifyExpiration(token))
                     .map((RefreshToken verifiedToken) -> verifiedToken.getUser())
                     .map((User user) -> {
-                        String newAccessToken = jwtProvider.generateTokenFromUsername(user.getEmail());
+                        String newAccessToken = jwtProvider.generateToken(user.getId(), user.getName(),
+                                jwtProvider.getJwtRefreshExpirationMs());
 
                         TokenRefreshResponse tokenResponse = new TokenRefreshResponse(newAccessToken, refreshToken);
 
@@ -200,10 +211,12 @@ public class AuthImplService implements AuthService {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-            User user = this.userRepository.findByEmail(authentication.getName())
+            log.info("hello: {}", authentication.getName());
+
+            User user = this.userRepository.findByName(authentication.getName())
                     .orElseThrow(() -> new UsernameNotFoundException("Email not found - " + authentication.getName()));
 
-            UserResponse response = UserMapper.toUserResponse(user);
+            UserResponse response = userMapper.toUserResponse(user);
 
             log.info("Current user retrieved successfully: {}", user.getEmail());
 

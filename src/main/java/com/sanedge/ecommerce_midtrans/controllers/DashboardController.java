@@ -21,7 +21,7 @@ public class DashboardController {
         this.dashboardService = dashboardService;
     }
 
-    @GetMapping("/")
+    @GetMapping()
     public ResponseEntity<MessageResponse> getDashboardData() {
         log.info("Fetching dashboard data");
         MessageResponse response = dashboardService.dashboard();

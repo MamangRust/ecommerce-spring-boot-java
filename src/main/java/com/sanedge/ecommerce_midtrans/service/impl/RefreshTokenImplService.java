@@ -14,9 +14,10 @@ import com.sanedge.ecommerce_midtrans.models.RefreshToken;
 import com.sanedge.ecommerce_midtrans.models.User;
 import com.sanedge.ecommerce_midtrans.repository.RefreshTokenRepository;
 import com.sanedge.ecommerce_midtrans.repository.UserRepository;
+import com.sanedge.ecommerce_midtrans.service.RefreshTokenService;
 
 @Service
-public class RefreshTokenImplService {
+public class RefreshTokenImplService implements RefreshTokenService {
     @Value("${springjwt.app.jwtRefreshExpirationMs}")
     private Long refreshTokenDurationMs;
 
@@ -38,12 +39,12 @@ public class RefreshTokenImplService {
         return refreshTokenRepository.findByUser(user);
     }
 
-    public RefreshToken createRefreshToken(Long userId) {
+    public RefreshToken createRefreshToken(Long userId, String token) {
         RefreshToken refreshToken = new RefreshToken();
 
         refreshToken.setUser(userRepository.findById(userId).get());
         refreshToken.setExpiryDate(Instant.now().plusMillis(refreshTokenDurationMs));
-        refreshToken.setToken(UUID.randomUUID().toString());
+        refreshToken.setToken(token);
 
         refreshToken = refreshTokenRepository.save(refreshToken);
         return refreshToken;

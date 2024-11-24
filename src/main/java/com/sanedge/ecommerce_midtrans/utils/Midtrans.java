@@ -3,11 +3,13 @@ package com.sanedge.ecommerce_midtrans.utils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
+
 import com.midtrans.Config;
 import com.midtrans.ConfigFactory;
 import com.midtrans.service.MidtransSnapApi;
 
-@Configuration
+@Component
 public class Midtrans {
     @Value("${midtrans.server-key}")
     private String serverKey;

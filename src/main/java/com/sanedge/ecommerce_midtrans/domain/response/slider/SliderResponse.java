@@ -18,4 +18,10 @@ public class SliderResponse {
 
     @JsonProperty("image")
     private String image;
+
+    @JsonProperty("created_at")
+    private String createdAt;
+
+    @JsonProperty("updated_at")
+    private String updatedAt;
 }

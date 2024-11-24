@@ -9,6 +9,7 @@ import com.sanedge.ecommerce_midtrans.domain.request.midtrans.CreditCardMidtrans
 import com.sanedge.ecommerce_midtrans.domain.request.midtrans.CustomerMidtransDetails;
 import com.sanedge.ecommerce_midtrans.domain.request.midtrans.RequestMidtrans;
 import com.sanedge.ecommerce_midtrans.domain.request.midtrans.TransactionMidtransDetails;
+import com.sanedge.ecommerce_midtrans.domain.response.MessageResponse;
 import com.sanedge.ecommerce_midtrans.domain.response.midtrans.SnapMidtransResponse;
 import com.sanedge.ecommerce_midtrans.service.SnapClientService;
 
@@ -17,13 +18,20 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class SnapClientImplService implements SnapClientService {
     private Midtrans midtrans;
 
-    public RequestMidtrans createRequest(CreateMidtransRequest request) {
+    @Autowired
+    public SnapClientImplService(Midtrans midtrans){
+        this.midtrans = midtrans;
+    }
+
+
+    public MessageResponse createRequest(CreateMidtransRequest request) {
         TransactionMidtransDetails transactionMidtransDetails = new TransactionMidtransDetails();
         transactionMidtransDetails.setOrderId("order-csb-" + UUID.randomUUID().toString());
         transactionMidtransDetails.setGrossAmount(request.getGrossAmount());
@@ -48,7 +56,7 @@ public class SnapClientImplService implements SnapClientService {
         snapRequest.setCustomerDetails(customerMidtransDetails);
         snapRequest.setCallbacks(callbacks);
 
-        return snapRequest;
+        return MessageResponse.builder().data(snapRequest).message("Success").statusCode(200).build();
     }
 
      private Map<String, Object> createRequestMap(CreateMidtransRequest request) {

@@ -10,15 +10,12 @@ import java.util.Optional;
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Long> {
 
-    @SuppressWarnings("null")
     @Override
     List<Category> findAll();
 
-    @SuppressWarnings("null")
     Optional<Category> findById(Long id);
 
-    Optional<Category> findBySlug(String slugCategory);
+    Optional<Category> findBySlugCategory(String slugCategory);
 
-    @SuppressWarnings("null")
     void deleteById(Long id);
 }

@@ -22,8 +22,8 @@ public class CategoryMapper {
                 .description(category.getDescription())
                 .slug(category.getSlugCategory())
                 .imagePath(category.getImageCategory())
-                .createdAt(category.getCreatedAt().toString())
-                .updatedAt(category.getUpdatedAt().toString())
+                .createdAt(category.getCreatedAt() != null ? category.getCreatedAt().toString() : null)
+                .updatedAt(category.getUpdatedAt() != null ? category.getUpdatedAt().toString() : null)
                 .build();
     }
 

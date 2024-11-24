@@ -20,7 +20,7 @@ public class OrderController {
         this.orderService = orderService;
     }
 
-    @GetMapping("/")
+    @GetMapping()
     public ResponseEntity<MessageResponse> getAllOrders() {
         log.info("Fetching all orders");
         MessageResponse response = orderService.getAll();
